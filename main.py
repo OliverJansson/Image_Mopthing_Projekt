@@ -24,8 +24,8 @@ def pixelate(image:int, pixel_size:int = 30):
 
     return new_image, False
 
-### BackBone ###
-def pixelate_circul(image, pixel_size):
+
+def pixelate_circle(image, pixel_size):
     
     det_faces = fc.detect_face(image)
 
@@ -36,8 +36,9 @@ def pixelate_circul(image, pixel_size):
 
     for x, y, width, hight in det_faces:
         #Resize the image with interpolation
-        resized_image = cv.resize(image[y:y+hight, x:x+width], (width // pixel_size, hight // pixel_size), 
-                               interpolation=cv.INTER_LINEAR)
+        resized_image = cv.resize(image[y:y+hight, x:x+width], 
+                                (width // pixel_size, hight // pixel_size), 
+                                interpolation=cv.INTER_LINEAR)
     
       
         h_s, w_s, _ = resized_image.shape
@@ -58,7 +59,7 @@ def pixelate_circul(image, pixel_size):
     return new_image, False
 
 
-def callback(kernal_size:int):
+def callback(input:int):
     pass
 
 
@@ -76,18 +77,28 @@ def pixel_face(filename:str, scale:float=0.25):
 
     image = cv.resize(image, (w, h))
     
-    windowName = "Face Pixelated"
-    cv.namedWindow(windowName)
-    cv.createTrackbar("Size", windowName, 10, 50, callback)
+    image_window = "Face Pixelated"
+    control_window = "Control Panal"
+    cv.namedWindow(image_window)
+    cv.namedWindow(control_window, cv.WINDOW_NORMAL)
+    cv.resizeWindow(control_window, 480, 480)
+
+    cv.createTrackbar("Pixel Size", control_window, 10, 50, callback)
+    cv.createTrackbar("Pixel format", control_window, 0, 1, callback)
 
     while True:
         if cv.waitKey(1) == ord("q"):
             break
 
-        kernal_size = max(1, cv.getTrackbarPos("Size", windowName))
-        new_image, flag = pixelate(image, pixel_size=kernal_size)
+        kernal_size = max(2, cv.getTrackbarPos("Pixel Size", control_window))
+        button_state = cv.getTrackbarPos("Pixel format", control_window)
 
-        cv.imshow(windowName, new_image)
+        if button_state:
+            new_image, flag = pixelate_circle(image,   pixel_size=kernal_size)
+        else:
+            new_image, flag = pixelate(image,   pixel_size=kernal_size)
+
+        cv.imshow(image_window, new_image)
 
     cv.destroyAllWindows()
     return
@@ -96,26 +107,36 @@ def pixel_face(filename:str, scale:float=0.25):
 def pixel_face_video():
     cap = cv.VideoCapture(0)
 
-    windowName = "Face Pixelated"
-    cv.namedWindow(windowName)
-    cv.createTrackbar("Size", windowName, 10, 50, callback)
+    camera_window = "Face Pixelated"
+    control_window = "Control Panal"
+    cv.namedWindow(camera_window)
+    cv.namedWindow(control_window, cv.WINDOW_NORMAL)
+    cv.resizeWindow(control_window, 480, 480)
+
+    cv.createTrackbar("Pixel Size", control_window, 10, 50, callback)
+    cv.createTrackbar("Pixel format", control_window, 0, 1, callback)
+
     while True:
         if cv.waitKey(1) == ord("q"):
-            break
+            break                                                                                                                                                                                               
         
-        kernal_size = max(2, cv.getTrackbarPos("Size", windowName))
+        kernal_size = max(2, cv.getTrackbarPos("Pixel Size", control_window))
+        button_state = cv.getTrackbarPos("Pixel format", control_window)
 
         ret, frame = cap.read()
-        #new_frame, flag = pixelate(frame,   pixel_size=kernal_size)
-        new_frame, flag = pixelate_circul(frame,   pixel_size=kernal_size)
-        cv.imshow(windowName, new_frame)
+        if button_state:
+            new_frame, flag = pixelate_circle(frame,   pixel_size=kernal_size)
+        else:
+            new_frame, flag = pixelate(frame,   pixel_size=kernal_size)
+
+        cv.imshow(camera_window, new_frame)
 
     cap.release()
     cv.destroyAllWindows() 
     return
 
-########## MAIN ###########
 
+########## MAIN ###########
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Image Morph") 
     parser.add_argument("-v", "--video", action='store_true', help="Uses the camera")
