@@ -1,0 +1,5 @@
+# Image Proceesing
+
+This Is a hobby repository.
+
+For it to work you need to download and add the haarcascade_frontalface_default.xml file form https://github.com/opencv/opencv/blob/master/data/haarcascades/haarcascade_frontalface_default.xml for the openCV face recognition
